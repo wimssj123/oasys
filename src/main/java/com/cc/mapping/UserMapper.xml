@@ -1,0 +1,222 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cc.dao.UserMapper">
+  <resultMap id="BaseResultMap" type="com.cc.entity.User">
+    <id column="id" jdbcType="INTEGER" property="id" />
+    <result column="no" jdbcType="VARCHAR" property="no" />
+    <result column="password" jdbcType="VARCHAR" property="password" />
+    <result column="name" jdbcType="VARCHAR" property="name" />
+    <result column="flag" jdbcType="INTEGER" property="flag" />
+    <result column="headphoto" jdbcType="VARCHAR" property="headphoto" />
+  </resultMap>
+
+
+  <sql id="Base_Column_List">
+    id, no, password, name, flag, headphoto
+  </sql>
+  <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+    select 
+    <include refid="Base_Column_List" />
+    from t_user
+    where id = #{id,jdbcType=INTEGER}
+  </select>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
+    delete from t_user
+    where id = #{id,jdbcType=INTEGER}
+  </delete>
+  <insert id="insert" parameterType="com.cc.entity.User">
+    insert into t_user (id, no, password, 
+      name, flag, headphoto
+      )
+    values (#{id,jdbcType=INTEGER}, #{no,jdbcType=VARCHAR}, #{password,jdbcType=VARCHAR}, 
+      #{name,jdbcType=VARCHAR}, #{flag,jdbcType=INTEGER}, #{headphoto,jdbcType=VARCHAR}
+      )
+  </insert>
+  <insert id="insertSelective" parameterType="com.cc.entity.User">
+    insert into t_user
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        id,
+      </if>
+      <if test="no != null">
+        no,
+      </if>
+      <if test="password != null">
+        password,
+      </if>
+      <if test="name != null">
+        name,
+      </if>
+      <if test="flag != null">
+        flag,
+      </if>
+      <if test="headphoto != null">
+        headphoto,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        #{id,jdbcType=INTEGER},
+      </if>
+      <if test="no != null">
+        #{no,jdbcType=VARCHAR},
+      </if>
+      <if test="password != null">
+        #{password,jdbcType=VARCHAR},
+      </if>
+      <if test="name != null">
+        #{name,jdbcType=VARCHAR},
+      </if>
+      <if test="flag != null">
+        #{flag,jdbcType=INTEGER},
+      </if>
+      <if test="headphoto != null">
+        #{headphoto,jdbcType=VARCHAR},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateByPrimaryKeySelective" parameterType="com.cc.entity.User">
+    update t_user
+    <set>
+      <if test="no != null">
+        no = #{no,jdbcType=VARCHAR},
+      </if>
+      <if test="password != null">
+        password = #{password,jdbcType=VARCHAR},
+      </if>
+      <if test="name != null">
+        name = #{name,jdbcType=VARCHAR},
+      </if>
+      <if test="flag != null">
+        flag = #{flag,jdbcType=INTEGER},
+      </if>
+      <if test="headphoto != null">
+        headphoto = #{headphoto,jdbcType=VARCHAR},
+      </if>
+    </set>
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="com.cc.entity.User">
+    update t_user
+    set no = #{no,jdbcType=VARCHAR},
+      password = #{password,jdbcType=VARCHAR},
+      name = #{name,jdbcType=VARCHAR},
+      flag = #{flag,jdbcType=INTEGER},
+      headphoto = #{headphoto,jdbcType=VARCHAR}
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+
+
+  <resultMap id="userdetailResult"  type="com.cc.vo.VUser">
+    <id property="id"  column="id" />
+    <result property="no" column="no"/>
+    <result property="name" column="name"/>
+    <result property="flag" column="flag"/>
+    <collection property="roles"  ofType="com.cc.entity.Role" javaType="java.util.ArrayList">
+      <id property="id"  column="rid"/>
+      <result property="info"  column="info"/>
+    </collection>
+  </resultMap>
+
+  <select id="selectAll" parameterType="map" resultMap="userdetailResult">
+    select u.id,u.no,u.name,r.id rid,r.info,u.flag from (SELECT * from t_user
+    <where>
+      <if test="no != null and no != ''">
+        and no LIKE CONCAT('%',#{no},'%' )
+      </if>
+      <if test="flag != null">
+        and flag = #{flag}
+      </if>
+    </where>) u
+    left join
+    t_userrole ur ON
+    ur.uid=u.id
+    left join t_role r
+    on r.id=ur.rid
+    ORDER BY u.id ASC
+
+
+  </select>
+
+
+
+  <select id="findAllByPage" parameterType="map" resultMap="userdetailResult">
+      select u.id,u.no,u.name,r.id rid,r.info,u.flag from (SELECT * from t_user
+        <where>
+          <if test="no != null and no != ''">
+            and no LIKE CONCAT('%',#{no},'%' )
+          </if>
+          <if test="flag != null">
+            and flag = #{flag}
+          </if>
+        </where>
+
+      limit #{page},#{limit}) u
+      left join
+      t_userrole ur ON
+      ur.uid=u.id
+      left join t_role r
+      on r.id=ur.rid
+      ORDER BY u.id ASC
+      <!--<where>-->
+
+        <!--<if test="no != null and no != ''">-->
+          <!--and u.no LIKE CONCAT('%',#{no},'%' )-->
+        <!--</if>-->
+        <!--<if test="flag != null">-->
+          <!--and u.flag = #{flag}-->
+        <!--</if>-->
+      <!--</where>-->
+
+
+  </select>
+
+  <select id="findAllManage" parameterType="string" resultMap="userdetailResult">
+    select u.id,u.no,u.name,r.id rid,r.info,u.flag
+	from t_user u
+    inner join
+    t_userrole ur
+	ON ur.uid=u.id
+    inner join t_role r
+    on r.id=ur.rid
+	where r.name=#{name}
+    ORDER BY u.id ASC
+
+  </select>
+
+  <select id="findRoleByName" parameterType="string" resultType="string">
+		select r.name from t_user u
+		inner join t_userrole ur
+		on u.id=ur.uid
+		inner join t_role r
+		on ur.rid=r.id
+		where u.no=#{no}
+	</select>
+
+  <select id="findPermisionByName" parameterType="string" resultType="string">
+		select distinct p.desc from t_user u
+		inner join t_userrole ur
+		on u.id=ur.uid
+		inner join t_roleauthority rp
+		on rp.rid=ur.rid
+		inner join t_authority p
+		on p.id=rp.aid
+		<where>
+		<if test="no!=null and no!=''" >
+          u.no=#{no}
+        </if>
+		</where>
+  </select>
+
+  <select id="findRoleById" parameterType="int" resultMap="com.cc.dao.RoleMapper.BaseResultMap">
+    select r.* from  t_user u
+    inner join t_userrole ur
+    ON ur.uid=u.id
+    inner join t_role r
+    on r.id=ur.rid
+    where u.id=#{id}
+  </select>
+
+
+
+</mapper>

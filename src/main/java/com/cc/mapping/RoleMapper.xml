@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cc.dao.RoleMapper">
+  <resultMap id="BaseResultMap" type="com.cc.entity.Role">
+    <id column="id" jdbcType="INTEGER" property="id" />
+    <result column="info" jdbcType="VARCHAR" property="info" />
+    <result column="name" jdbcType="VARCHAR" property="name" />
+    <result column="parentId" jdbcType="INTEGER" property="parentid" />
+  </resultMap>
+  <sql id="Base_Column_List">
+    id, info, name, parentId
+  </sql>
+  <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+    select 
+    <include refid="Base_Column_List" />
+    from t_role
+    where id = #{id,jdbcType=INTEGER}
+  </select>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
+    delete from t_role
+    where id = #{id,jdbcType=INTEGER}
+  </delete>
+  <insert id="insert" parameterType="com.cc.entity.Role">
+    insert into t_role (id, info, name, 
+      parentId)
+    values (#{id,jdbcType=INTEGER}, #{info,jdbcType=VARCHAR}, #{name,jdbcType=VARCHAR}, 
+      #{parentid,jdbcType=INTEGER})
+  </insert>
+  <insert id="insertSelective" parameterType="com.cc.entity.Role">
+    insert into t_role
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        id,
+      </if>
+      <if test="info != null">
+        info,
+      </if>
+      <if test="name != null">
+        name,
+      </if>
+      <if test="parentid != null">
+        parentId,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        #{id,jdbcType=INTEGER},
+      </if>
+      <if test="info != null">
+        #{info,jdbcType=VARCHAR},
+      </if>
+      <if test="name != null">
+        #{name,jdbcType=VARCHAR},
+      </if>
+      <if test="parentid != null">
+        #{parentid,jdbcType=INTEGER},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateByPrimaryKeySelective" parameterType="com.cc.entity.Role">
+    update t_role
+    <set>
+      <if test="info != null">
+        info = #{info,jdbcType=VARCHAR},
+      </if>
+      <if test="name != null">
+        name = #{name,jdbcType=VARCHAR},
+      </if>
+      <if test="parentid != null">
+        parentId = #{parentid,jdbcType=INTEGER},
+      </if>
+    </set>
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="com.cc.entity.Role">
+    update t_role
+    set info = #{info,jdbcType=VARCHAR},
+      name = #{name,jdbcType=VARCHAR},
+      parentId = #{parentid,jdbcType=INTEGER}
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+
+  <select id="findAll" resultType="com.cc.entity.Role">
+
+   SELECT * FROM t_role
+
+  </select>
+
+  <delete id="deleteByUid" parameterType="int">
+    DELETE from t_userrole where uid=#{uid}
+
+  </delete>
+
+  <insert id="insertByUidRid" parameterType="map">
+
+    insert into t_userrole values (#{uid},#{rid})
+
+  </insert>
+
+  <!-- 额外增加 -->
+  <resultMap type="com.cc.vo.VMenuInfo" id="menuMap">
+    <id property="id" column="pid"/>
+    <result property="title" column="ptitle"/>
+    <result property="url" column="purl"/>
+    <result property="icon" column="icon"/>
+    <collection property="cMenu" javaType="java.util.ArrayList" ofType="com.cc.vo.VMenuInfo">
+      <id property="id" column="cid"/>
+      <result property="title" column="ctitle"/>
+      <result property="url" column="curl"/>
+    </collection>
+
+  </resultMap>
+
+
+  <select id="findMenu" parameterType="list" resultMap="menuMap">
+      select a1.id cid, a1.title ctitle, a1.aicon, a1.aurl curl, a2.id pid, a2.aurl purl, a2.title ptitle
+      from t_role r
+      inner join t_roleauthority ry
+      on r.id=ry.rid
+      INNER JOIN t_authority a1
+      on ry.aid=a1.id
+      INNER JOIN t_authority a2
+      on a1.parentId=a2.id
+      where r.id in
+      <foreach collection="list" item="id" separator="," open="(" close=")">
+        #{id}
+      </foreach>
+  </select>
+
+  <resultMap id="rolemap"  type="com.cc.vo.VRole">
+    <id property="id"  column="id" />
+    <result property="info" column="info"/>
+    <result property="name" column="name"/>
+    <result property="parentid" column="parentid"/>
+    <collection property="alist"  ofType="com.cc.entity.Authority" javaType="java.util.ArrayList">
+      <id property="id"  column="aid"/>
+      <result property="title"  column="title"/>
+    </collection>
+  </resultMap>
+
+  <select id="findAllByCondition" parameterType="string" resultMap="rolemap">
+    SELECT r.*,a.id aid,a.title  from (select * from t_role
+    <where>
+      <if test="name != null and name != ''">
+        and name LIKE CONCAT('%',#{name},'%' )
+      </if>
+    </where>) r
+    LEFT JOIN  t_roleauthority rau
+    on r.id = rau.rid
+    LEFT JOIN t_authority a
+    on rau.aid = a.id
+    ORDER BY r.id
+
+  </select>
+
+  <delete id="deleteByRid" parameterType="int">
+
+    DELETE from t_roleauthority where rid = #{rid}
+  </delete>
+
+  <insert id="insertByRidAid" parameterType="map">
+
+    INSERT into t_roleauthority VALUES(#{rid},#{aid})
+  </insert>
+
+
+</mapper>
